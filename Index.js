@@ -1,34 +1,54 @@
+import 'dotenv/config'; // تحميل التوكن من ملف .env
+import OpenAI from "openai";
+import readline from "readline";
 
-# M4X-Prime-AI
+const token = process.env["GITHUB_TOKEN"];
+const endpoint = "https://models.github.ai/inference";
+const model = "openai/gpt-4o";
 
-نموذج دردشة ذكي بلغة JavaScrip (Node.js)، يعتمد موديل GPT‑4o عبر GitHub Proxy، مع إمكانية تغيير نبرة الرد بسهولة.
+let userTone = "نبرة عادية: رد بأدب ووضوح دون مبالغة";
 
-## التثبيت
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
 
-```bash
-npm install openai readline
-```
+const client = new OpenAI({
+  baseURL: endpoint,
+  apiKey: token
+});
 
-## التشغيل
+async function ask(question) {
+  const response = await client.chat.completions.create({
+    model: model,
+    messages: [
+      {
+        role: "system",
+        content: `أنت مساعد ذكي. استخدم الأسلوب التالي دائماً: ${userTone}`
+      },
+      {
+        role: "user",
+        content: question
+      }
+    ],
+    temperature: 1,
+    top_p: 1
+  });
+  console.log("\n🤖:", response.choices[0].message.content);
+}
 
-أضف متغير البيئة:
+function promptUser() {
+  rl.question("\n🧠 اكتب سؤالك أو قل (نبرة:...) لتغيير الأسلوب > ", async (input) => {
+    if (input.toLowerCase().startsWith("نبرة:")) {
+      userTone = input.slice(6).trim();
+      console.log(`✅ تم تغيير النبرة إلى: ${userTone}`);
+    } else {
+      await ask(input);
+    }
+    promptUser();
+  });
+}
 
-```bash
-export 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
-```
-
-ثم:
-
-```bash
-node index.js
-```
-
-### طريقة الاستخدام
-
-- اكتب أسئلتك مباشرة، كل سؤال سيرد عليه النموذج.
-- لتغيير النبرة:
-```
-نبرة: ودية
-نبرة: حادة
-نبرة: رسمية
-```
+console.log("مرحبًا بك في M-4X Prime 🤖\n");
+console.log("🔄 يمكنك تغيير النبرة بكتابة: نبرة: رسمية | ساخرة | ودية |... الخ\n");
+promptUser();
