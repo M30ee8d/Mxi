@@ -16,7 +16,8 @@ npm install openai readline
 أضف متغير البيئة:
 
 ```bash
-export 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
+expoi
+
 ```
 
 ثم:
